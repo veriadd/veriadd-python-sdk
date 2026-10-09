@@ -1,0 +1,28 @@
+name: publish
+
+# One-click releases, no local toolchain required. Only runs when YOU press
+# the button in the GitHub UI (Actions tab -> publish -> Run workflow).
+# Requires Trusted Publishing configured on PyPI for this repo.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version being released (must match pyproject.toml)"
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC for PyPI trusted publishing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build
+      - run: pip install -e ".[test]"
+      - run: python -m pytest -q
+      - run: python -m build
+      - uses: pypa/gh-action-pypi-publish@release/v1
